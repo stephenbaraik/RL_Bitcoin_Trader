@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  jupyter:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.base
+    volumes:
+      - ../data:/data
+      - ../notebooks:/notebooks
+      - ../src:/app/src
+    ports:
+      - "8888:8888"
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''"]
+  trainer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.base
+    volumes:
+      - ../data:/data
+      - ../models:/models
+      - ../src:/app/src
+    command: ["python","-u","src/agents/train.py"]

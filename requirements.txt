@@ -1,0 +1,7 @@
+pandas
+numpy
+gym
+matplotlib
+stable-baselines3
+ccxt
+jupyterlab
