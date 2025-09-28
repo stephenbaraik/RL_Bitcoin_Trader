@@ -5,3 +5,4 @@ matplotlib
 stable-baselines3
 ccxt
 jupyterlab
+shimmy>=2.0
