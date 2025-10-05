@@ -1,280 +1,197 @@
-<div align="center">
+### Project Report & Implementation Template
 
-# 🪙 RL Bitcoin Trader
-### *Dockerized Reinforcement Learning Trading Bot*
+Name: _______________________
 
-A beginner-friendly, containerized environment for building and experimenting with **Reinforcement-Learning-based Bitcoin trading agents**.
+Roll number: _______________________
 
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat-square&logo=jupyter&logoColor=white)](https://jupyter.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+Program: B.Sc. (Data Science)
 
-*Runs locally on your laptop using **Docker Compose** + **Jupyter Lab***
+Semester: V , Technology Lab - III
 
-</div>
+### 1. Project Title
 
----
+Reinforcement Learning Bitcoin Trading Bot using PPO and Streamlit
 
-## 🎯 Why Use This Project?
+### 2. Abstract
 
-> **Perfect for:** Students, researchers, and developers who want to explore reinforcement learning in financial markets without complex setup.
+This project develops a reinforcement learning (RL) agent to trade Bitcoin using Proximal Policy Optimization (PPO). A custom trading environment converts historical prices into observations representing recent normalized price changes and the agent’s current position. The action is a continuous allocation fraction to Bitcoin, and the reward is the relative change in portfolio value after transaction fees. A Streamlit app enables users to upload a CSV dataset, train the PPO model, evaluate performance, and visualize portfolio value, price, and position over time. Results indicate that RL can learn adaptive allocation strategies on historical data, but performance depends on data quality, hyperparameters, and market regimes. The work demonstrates an end-to-end RL workflow for financial decision-making and outlines future directions such as richer features, Gymnasium migration, and risk-aware objectives.
 
-### 🔥 Key Features
+### 3. Introduction
 
-| Component | Description | Benefits |
-|-----------|-------------|----------|
-| 🚀 **Docker Environment** | Python 3.10 + ML libraries | Zero setup hassles, consistent environment |
-| 📈 **Trading Environment** | Custom Gym environment | Easy to modify and experiment with |
-| 🤖 **PPO Agent** | Pre-built RL agent | Start training immediately |
-| � **Jupyter Lab** | Interactive development | Data visualization & analysis |
-| �️ **Make Commands** | Simplified workflows | One-command build, train, deploy |
-| 💾 **Persistent Storage** | Volume-mounted data/models | Your work survives container restarts |
+- **Background**: Trading is a sequential decision problem where actions influence future rewards. RL is well-suited for such tasks.
+- **Importance**: Automated strategies can respond consistently to market changes and reduce human bias.
+- **Applications**: Crypto trading, portfolio allocation, quant research, robo-advisory.
 
-### 🧬 Tech Stack
+### 4. Problem Statement & Objectives
 
-- **ML Frameworks:** Stable-Baselines3, OpenAI Gym, NumPy, Pandas
-- **Data Sources:** CCXT (cryptocurrency exchange integration)
-- **Containerization:** Docker, Docker Compose
-- **Development:** Jupyter Lab, Python 3.10
-- **Visualization:** Matplotlib, Plotly (via notebooks)
+- **Problem**: Learn a policy to dynamically allocate a portfolio between cash and Bitcoin to maximize risk-adjusted returns, accounting for trading fees.
+- **Objectives**:
+  - Build a stable custom trading environment with robust observations and rewards.
+  - Train a PPO agent on historical closing prices.
+  - Provide a Streamlit UI for dataset upload, train/evaluate, and model save/load.
+  - Visualize portfolio value, price, and position fraction; report return, Sharpe, and max drawdown.
 
----
+### 5. Literature Review (Optional)
 
-## � Project Architecture
+- Schulman et al., Proximal Policy Optimization (PPO) Algorithms.
+- Moody & Saffell (1999), Reinforcement Learning for Trading.
+- Stable-Baselines3 applications in financial RL.
 
-<details>
-<summary><b>📁 Click to expand folder structure</b></summary>
+### 6. Dataset Description
 
-```bash
-RL_Bitcoin_Trader/
-├── 🐳 compose/                 # Docker orchestration
-│   └── docker-compose.yml      # Multi-container setup
-├── 🚢 docker/                  # Container definitions
-│   ├── Dockerfile.base         # Base Python environment
-│   ├── Dockerfile.train        # Training container
-│   └── Dockerfile.exec         # Execution container  
-├── 📊 data/                    # Market data storage
-│   └── btc_sample.csv          # Sample BTC price data
-├── 🧠 models/                  # Trained AI models
-│   └── (generated .zip files)  # Saved RL agents
-├── 📓 notebooks/               # Jupyter experiments
-│   └── (your analysis files)   # Data exploration & results
-├── 🔧 src/                     # Source code
-│   ├── 🏟️ envs/                # Trading environments
-│   │   └── trading_env.py      # Custom Gym environment
-│   ├── 🤖 agents/              # RL agents
-│   │   └── train.py            # PPO training script
-│   ├── 📈 backtest/            # Backtesting modules
-│   ├── 🗃️ data/                # Data processing
-│   ├── ⚡ exec/                # Live execution
-│   └── 🛠️ utils/               # Helper functions
-├── 📋 requirements.txt         # Python dependencies
-├── ⚙️ Makefile                # Automation commands
-└── 📖 README.md               # This file
-```
+- **Source**: Public BTC-USD price data (e.g., Yahoo Finance) or Kaggle crypto datasets.
+- **Link (example)**: `https://finance.yahoo.com/quote/BTC-USD/history/` (export CSV)
+- **Local sample**: `data/btc_sample.csv`
+- **Records & features**: Varies by export; minimum required column: `Close` or `close`.
+- **Data type**: Numeric time series.
+- **Sample (first 5 rows)**: Use `pd.read_csv(...).head()`; app expects a `Close/close` column.
 
-</details>
+### 7. Methodology
 
-### 🧩 Core Components
+1. Load CSV; sanitize: drop NaNs, keep positive prices; map to `close` column.
+2. Observation: recent window of normalized price relatives + current position fraction.
+3. Action space: continuous in [0, 1] representing target BTC allocation of portfolio.
+4. Execute trades with fee; compute reward as relative change in portfolio value.
+5. Train PPO (Stable-Baselines3) for configured timesteps.
+6. Evaluate deterministically; compute total return, Sharpe ratio, and max drawdown.
+7. Visualize outputs in Streamlit (portfolio value, price, position).
 
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| `src/envs/` | **Trading Environment** | Custom Gym env for RL training |
-| `src/agents/` | **AI Models** | PPO agent implementation |
-| `data/` | **Market Data** | Historical price feeds |
-| `models/` | **Trained Agents** | Serialized model checkpoints |
-| `notebooks/` | **Research** | Jupyter analysis & visualization |
+- **Algorithm**: PPO (clipped policy gradient).
 
----
+### 8. Tools & Software Used
 
-## � Prerequisites & Setup
+- **Programming Language**: Python
+- **Platform**: Local (Streamlit); optional Google Colab for experiments
+- **Libraries**: pandas, numpy, torch, stable-baselines3, streamlit, gym/gymnasium, matplotlib/plotly (optional)
 
-> **⚡ Quick Start:** Only need Docker! Everything else runs in containers.
+### 9. Implementation (Code)
 
-### 📋 Required Software
-
-| Tool | Version | Purpose | Installation |
-|------|---------|---------|-------------|
-| 🐳 **Docker Desktop** | Latest | Container runtime | [Get Docker](https://www.docker.com/products/docker-desktop) |
-| 📦 **Git** | Any | Version control | [Download Git](https://git-scm.com/downloads) |
-| ⚙️ **Make** | Optional | Command shortcuts | Windows: `choco install make` |
-
-### 🚀 System Requirements
-
-- **OS:** Windows 10/11, macOS, or Linux
-- **RAM:** 4GB+ recommended (8GB+ for training)  
-- **Storage:** 2GB+ free space
-- **CPU:** Any modern processor (GPU optional but recommended)
-
----
-
-## 🚀 Quick Start Guide
-
-### Step 1️⃣: Clone & Navigate
+- Repository provides an interactive app (`app.py`) that wires PPO training/evaluation to `rl_bot.py`.
+- Quick start locally:
 
 ```bash
-git clone https://github.com/yourusername/btc-rl-trader.git
-cd btc-rl-trader
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
-### Step 2️⃣: Build Environment
+- Google Colab minimal example (replace dataset path as needed):
 
-Choose your preferred method:
+```python
+# Step 1: Install
+!pip install pandas numpy torch stable-baselines3 gymnasium matplotlib -q
 
-**Option A: Using Make (Recommended)**
-```bash
-make build
+# Step 2: Imports
+import pandas as pd
+import numpy as np
+from dataclasses import dataclass
+import gymnasium as gym
+from gymnasium import spaces
+from stable_baselines3 import PPO
+import matplotlib.pyplot as plt
+
+# Step 3: Config & Env (simplified)
+@dataclass
+class TrainConfig:
+    total_timesteps: int = 100_000
+    window_size: int = 32
+    fee: float = 0.0005
+
+class BTCTradingEnv(gym.Env):
+    metadata = {"render_modes": []}
+    def __init__(self, df, window_size=32, init_cash=10_000.0, fee=0.0005):
+        super().__init__()
+        self.df = df.reset_index(drop=True)
+        self.window_size = window_size
+        self.init_cash = init_cash
+        self.fee = fee
+        self.action_space = spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(window_size + 1,), dtype=np.float32)
+        self.reset()
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+        self.current_step = self.window_size
+        self.cash = float(self.init_cash)
+        self.holdings = 0.0
+        return self._get_obs(), {}
+    def _get_obs(self):
+        start = self.current_step - self.window_size + 1
+        window = self.df['close'].iloc[start:self.current_step + 1].values.astype(np.float32)
+        window = np.where(np.isnan(window) | (window <= 0), 1e-6, window)
+        cur = window[-1]
+        rel = (window / cur) - 1.0
+        pos = np.array([self.get_pos()], dtype=np.float32)
+        return np.nan_to_num(np.concatenate([rel, pos]).astype(np.float32))
+    def get_pos(self):
+        price = float(self.df['close'].iloc[self.current_step])
+        price = price if (price > 0 and not np.isnan(price)) else 1e-6
+        pv = self.cash + self.holdings * price
+        return 0.0 if (pv <= 0 or np.isnan(pv)) else float((self.holdings * price) / pv)
+    def step(self, action):
+        target = float(np.clip(action[0], 0.0, 1.0))
+        cur = float(self.df['close'].iloc[self.current_step])
+        cur = cur if (cur > 0 and not np.isnan(cur)) else 1e-6
+        nxt = float(self.df['close'].iloc[min(self.current_step + 1, len(self.df)-1)])
+        nxt = nxt if (nxt > 0 and not np.isnan(nxt)) else cur
+        holdings_val = self.holdings * cur
+        prev_pv = max(self.cash + holdings_val, 1e-6)
+        desired_val = target * prev_pv
+        trade_val = desired_val - holdings_val
+        fees = abs(trade_val) * 0.0005
+        self.holdings += (trade_val / cur)
+        self.cash += (-trade_val - fees)
+        new_pv = self.cash + self.holdings * nxt
+        reward = (new_pv - prev_pv) / (prev_pv + 1e-12)
+        self.current_step += 1
+        done = (self.current_step >= len(self.df) - 1)
+        return self._get_obs(), float(reward), done, False, {"portfolio_value": new_pv}
+
+# Step 4: Data
+df = pd.read_csv('/content/btc.csv')
+if 'Close' in df.columns and 'close' not in df.columns:
+    df = df.rename(columns={'Close': 'close'})
+df = df[['close']].dropna()
+df = df[df['close'] > 0]
+
+# Step 5: Train
+cfg = TrainConfig()
+env = BTCTradingEnv(df, window_size=cfg.window_size, fee=cfg.fee)
+model = PPO('MlpPolicy', env, verbose=1)
+model.learn(total_timesteps=cfg.total_timesteps)
+
+# Step 6: Evaluate
+obs, _ = env.reset()
+pvs = []
+while True:
+    action, _ = model.predict(obs, deterministic=True)
+    obs, r, done, trunc, info = env.step(action)
+    pvs.append(info['portfolio_value'])
+    if done:
+        break
+plt.plot(pvs); plt.title('Portfolio Value'); plt.show()
 ```
 
-**Option B: Direct Docker Compose**
-```bash
-docker-compose -f compose/docker-compose.yml build
-```
+### 10. Sample Output Screens
 
-> 📝 **Note:** First build takes ~5-10 minutes as it downloads ML libraries
+- Dataset preview (first 5 rows in Colab or Streamlit)
+- Streamlit charts: price series, portfolio value, position fraction
+- PPO training logs (KL, entropy, explained variance)
 
-### Step 3️⃣: Launch Development Environment
+### 11. Results & Discussion
 
-```bash
-# Start all services (Jupyter + dependencies)
-make up
-```
-🎯 **Success!** Visit **http://localhost:8888** for Jupyter Lab
+- The PPO agent learns allocation behavior that can improve returns on some datasets.
+- Risk metrics (Sharpe, max drawdown) contextualize performance beyond raw returns.
+- Results are sensitive to window size, training length, fees, and market regime; robust validation is required.
 
-### Step 4️⃣: Train Your First Agent
+### 12. Conclusion
 
-1. **Prepare Data:** Sample BTC data is included (`data/btc_sample.csv`)
-2. **Start Training:**
-   ```bash
-   make train
-   ```
-3. **Monitor Progress:** Check logs for training metrics
-4. **Find Results:** Trained model saved as `models/ppo_baseline.zip`
+- **Key takeaways**: RL provides a flexible framework for sequential trading decisions; PPO is practical and stable.
+- **Real-world application**: Prototype allocation overlays; backtesting research.
+- **Limitations**: Non-stationary markets, transaction cost realism, feature sparsity, overfitting risk.
+- **Future work**: Add technical/volume features, Gymnasium migration, risk-aware rewards, walk-forward validation.
 
-> ⏱️ **Training Time:** ~2-5 minutes on modern hardware
+### 13. References
 
-### Step 5️⃣: Explore & Analyze
-
-**Open Jupyter Lab** and create new notebooks to:
-
-✅ **Load & visualize** Bitcoin price data  
-✅ **Plot training** reward curves  
-✅ **Backtest** your trained agent  
-✅ **Experiment** with different parameters  
-✅ **Compare** multiple model versions  
-
-### Step 6️⃣: Clean Up
-
-```bash
-# Stop all containers
-make down
-
-# Remove containers & volumes (optional)
-make clean
-```
-
-## 🩺 Troubleshooting
-
-### Common Issues & Solutions
-
-| ❌ Problem | 💡 Solution | 📝 Details |
-|-----------|-------------|------------|
-| `make: command not found` | Use Docker Compose directly | Run `docker-compose -f compose/docker-compose.yml [command]` |
-| `jupyter: executable not found` | Rebuild containers | Check `requirements.txt` includes `jupyterlab`, then `make build` |
-| Permission errors (Windows) | Enable WSL 2 backend | Docker Desktop → Settings → General → WSL 2 |
-| Port 8888 already in use | Change port or kill process | `docker-compose down` or modify port in compose file |
-| Out of memory during training | Reduce batch size | Edit training parameters in `src/agents/train.py` |
-
-### � Getting Help
-
-- **Check logs:** `docker-compose logs [service_name]`
-- **Debug container:** `docker-compose exec [service] bash`
-- **Reset environment:** `make clean && make build`
-
-## 🎯 Roadmap & Extensions
-
-### 🏁 Beginner Projects (Week 1-2)
-- [ ] 📊 **Data Analysis:** Explore BTC price patterns in Jupyter
-- [ ] 🎨 **Visualization:** Create candlestick charts and technical indicators  
-- [ ] 🔧 **Environment Tuning:** Modify reward functions and observation spaces
-- [ ] 📈 **Basic Backtesting:** Test agent performance on historical data
-
-### 🚀 Intermediate Features (Month 1-2)
-- [ ] 💰 **Advanced Rewards:** Add transaction costs, slippage, and risk metrics
-- [ ] 📡 **Live Data:** Integrate CCXT for real-time market feeds  
-- [ ] 🤖 **Multi-Agent:** Compare PPO vs SAC vs A2C algorithms
-- [ ] 📊 **Portfolio Management:** Multi-asset trading strategies
-- [ ] ⚡ **Paper Trading:** Deploy models in simulation mode
-
-### 🏗️ Advanced Development (Month 3+)
-- [ ] 🌐 **FastAPI Service:** REST API for model training/deployment
-- [ ] 📊 **Monitoring Stack:** Prometheus + Grafana dashboards  
-- [ ] 🔄 **CI/CD Pipeline:** Automated testing and deployment
-- [ ] 🧠 **Advanced ML:** Transformer models, ensemble methods
-- [ ] ☁️ **Cloud Deployment:** AWS/Azure container orchestration
-
-### 💡 Community Contributions
-- [ ] 📚 **Tutorial Notebooks:** Step-by-step learning guides
-- [ ] 🧪 **Strategy Library:** Pre-built trading algorithms  
-- [ ] 🔌 **Exchange Connectors:** More cryptocurrency exchange APIs
-- [ ] 📱 **Mobile Dashboard:** React Native monitoring app
-
----
-
-## � License & Legal
-
-### �📜 MIT License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-```text
-Copyright (c) 2025 RL Bitcoin Trader Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions...
-```
-
-### ⚠️ Important Disclaimer
-
-> **🚨 EDUCATIONAL USE ONLY**
-
-| ⚠️ **WARNING** | This is a learning project, NOT financial advice |
-|----------------|--------------------------------------------------|
-| 🎓 **Purpose** | Educational research and algorithm development |
-| 💰 **Real Money** | **NEVER** use with live funds without proper testing |
-| 📊 **No Guarantees** | Past performance ≠ Future results |
-| 🏛️ **Regulation** | Ensure compliance with local financial laws |
-| 🔒 **Risk Management** | Implement proper safeguards before any live use |
-
-**By using this software, you acknowledge:**
-- This is experimental technology for learning purposes
-- You assume full responsibility for any trading decisions  
-- No warranty or financial guarantee is provided
-- Always consult qualified financial professionals
-
----
-
-### 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### ⭐ Show Your Support
-
-If this project helped you learn about RL in finance, please ⭐ star the repository!
-
----
-
-<div align="center">
-
-**Built with ❤️ for the RL and FinTech communities**
-
-*Happy Trading! 📈🤖*
-
-</div>
- 
- 
+- Schulman et al., Proximal Policy Optimization Algorithms.
+- Stable-Baselines3 Documentation: `https://stable-baselines3.readthedocs.io/`
+- Farama Gymnasium: `https://gymnasium.farama.org/`
+- Yahoo Finance BTC-USD Historical Data.

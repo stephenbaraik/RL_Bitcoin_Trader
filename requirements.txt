@@ -6,3 +6,5 @@ stable-baselines3
 ccxt
 jupyterlab
 shimmy>=2.0
+streamlit
+torch>=2.0.0
